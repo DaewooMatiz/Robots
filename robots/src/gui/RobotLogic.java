@@ -1,32 +1,22 @@
 package gui;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.geom.AffineTransform;
-import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.sun.java.accessibility.util.AWTEventMonitor.addMouseListener;
-import static java.rmi.server.LogStream.log;
-
-public class RobotLogic extends Observable {
+public class RobotLogic {
     private final Timer m_timer = initTimer();
 
     private static Timer initTimer()
     {
-        Timer timer = new Timer("events generator", true);
-        return timer;
+        return new Timer("events generator", true);
     }
     public Timer getTimer()
     {
         return m_timer;
     }
 
-    private GameState status;
+    private final GameState status;
     public static final double maxVelocity = 0.1;
     public static final double maxAngularVelocity = 0.001;
 
@@ -86,7 +76,6 @@ public class RobotLogic extends Observable {
         }
 
         moveRobot(velocity, angularVelocity, 10);
-        notifyObservers(status);
     }
 
     private static double applyLimits(double value, double min, double max)

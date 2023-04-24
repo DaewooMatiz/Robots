@@ -1,10 +1,6 @@
 package gui;
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.TextArea;
-import log.LogChangeListener;
-import log.LogEntry;
-import log.LogWindowSource;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -14,9 +10,9 @@ import javax.swing.*;
 
 public class PosWindow extends JInternalFrame
 {
-    private Timer timer;
-    private RobotLogic robot;
-    private TextArea field;
+    private final Timer timer;
+    private final RobotLogic robot;
+    private final TextArea field;
     private GameState status;
 
     public PosWindow(RobotLogic robot)
@@ -27,20 +23,18 @@ public class PosWindow extends JInternalFrame
         status = robot.getStatus();
         field = new TextArea("");
         field.setSize(200, 500);
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(field, BorderLayout.CENTER);
-        getContentPane().add(panel);
-        pack();
         timer.schedule(new TimerTask()
         {
             @Override
             public void run()
             {
                 updatePosition();
-
             }
-        }, 0, 50);
+        }, 0, 10);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(field, BorderLayout.CENTER);
+        getContentPane().add(panel);
+        pack();
 
     }
 

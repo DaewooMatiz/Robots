@@ -4,18 +4,14 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.JPanel;
 
-import static java.rmi.server.LogStream.log;
 
 public class GameVisualizer extends JPanel
 {
@@ -23,17 +19,11 @@ public class GameVisualizer extends JPanel
 
     private RobotLogic robot;
     private GameState cState;
-    private Observer observer = new Observer() {
-        @Override
-        public void update(Observable o, Object arg) {
-            cState = robot.getStatus();
-        }
-    };
+
     
     public GameVisualizer(RobotLogic robot)
     {
         this.robot = robot;
-        robot.addObserver(observer);
         cState = robot.getStatus();
         m_timer = robot.getTimer();
         m_timer.schedule(new TimerTask()
