@@ -1,18 +1,10 @@
 package gui;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.*;
 
-import javax.swing.JDesktopPane;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 
 import log.Logger;
 
@@ -25,7 +17,8 @@ import log.Logger;
 public class MainApplicationFrame extends JFrame
 {
     private final JDesktopPane desktopPane = new JDesktopPane();
-    
+    private GameWindow gameWindow = new GameWindow();
+    private LogWindow logWindow = createLogWindow();
     public MainApplicationFrame() {
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
@@ -38,15 +31,21 @@ public class MainApplicationFrame extends JFrame
         setContentPane(desktopPane);
         
         
-        LogWindow logWindow = createLogWindow();
-        addWindow(logWindow);
 
-        GameWindow gameWindow = new GameWindow();
-        gameWindow.setSize(400,  400);
+
+
+
+        loadWindowsSizeLocation();
         addWindow(gameWindow);
-
+        addWindow(logWindow);
         setJMenuBar(generateMenuBar());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                exitApplication();
+            }
+        });
     }
     
     protected LogWindow createLogWindow()
@@ -134,12 +133,105 @@ public class MainApplicationFrame extends JFrame
             });
             testMenu.add(addLogMessageItem);
         }
+        JMenu exitMenu = new JMenu("Выход");
+        exitMenu.setMnemonic(KeyEvent.VK_V);
+        exitMenu.getAccessibleContext().setAccessibleDescription(
+                "Выход из приложения");
+        {
+            JMenuItem exitItem = new JMenuItem("Выйти", KeyEvent.VK_S);
+            exitItem.addActionListener((event) -> {
+                exitApplication();
+            });
+            exitMenu.add(exitItem);
+        }
+
 
         menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
+        menuBar.add(exitMenu);
+
         return menuBar;
     }
-    
+    {UIManager.put("OptionPane.yesButtonText","Да");
+        UIManager.put("OptionPane.noButtonText","Нет");}
+    public void exitApplication() {
+        int answer = JOptionPane.showConfirmDialog(null,
+                "Вы уверены? Весь несохраненный прогресс будет утерян.", "Выход из приложения", JOptionPane.YES_NO_OPTION);
+        if (answer == JOptionPane.YES_OPTION) {
+            saveWindowsSizeLocation();
+            System.exit(0);
+        }
+    }
+    private void saveWindowsSizeLocation(){
+        Dimension gwsize = gameWindow.getSize();
+        Dimension lwsize = logWindow.getSize();
+        Point gwloc = gameWindow.getLocation();
+        Point lwloc = logWindow.getLocation();
+        int gwicn = (gameWindow.isIcon()) ? 1 : 0;
+        int lwicn = (logWindow.isIcon()) ? 1 : 0;
+        logWindow.isIcon();
+        String settings = gwsize.height + "\n" + gwsize.width + "\n" + lwsize.height + "\n" + lwsize.width + "\n" +
+                gwloc.x + "\n" + gwloc.y + "\n" + lwloc.x + "\n" + lwloc.y + "\n" + gwicn + "\n" + lwicn;
+        File file = new File(System.getenv("HOMEPATH")+"\\windows.txt" );
+        try
+        {
+            FileWriter writer = new FileWriter(file);
+            writer.write(settings);
+            writer.flush();
+        }
+        catch(IOException ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private void loadWindowsSizeLocation(){
+        File file = new File(System.getenv("HOMEPATH")+"\\windows.txt" );
+        Dimension gwsize = new Dimension();
+        Dimension lwsize = new Dimension();
+        Point gwloc = new Point();
+        Point lwloc = new Point();
+        boolean gwicn = false;
+        boolean lwicn = false;
+        try
+        {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            gwsize.height = Integer.parseInt(reader.readLine());
+            gwsize.width = Integer.parseInt(reader.readLine());
+            lwsize.height = Integer.parseInt(reader.readLine());
+            lwsize.width = Integer.parseInt(reader.readLine());
+            gwloc.x = Integer.parseInt(reader.readLine());
+            gwloc.y = Integer.parseInt(reader.readLine());
+            lwloc.x = Integer.parseInt(reader.readLine());
+            lwloc.y = Integer.parseInt(reader.readLine());
+            gwicn = (Integer.parseInt(reader.readLine()) == 1);
+            lwicn = (Integer.parseInt(reader.readLine()) == 1);
+            reader.close();
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            gwsize.height = 400;
+            gwsize.width = 400;
+            lwsize.height = 400;
+            lwsize.width = 400;
+            gwloc.x = 0;
+            gwloc.y = 0;
+            lwloc.x = 10;
+            lwloc.y = 10;
+        }
+        gameWindow.setSize(gwsize);
+        logWindow.setSize(lwsize);
+        gameWindow.setLocation(gwloc);
+        logWindow.setLocation(lwloc);
+        try {
+            gameWindow.setIcon(gwicn);
+            logWindow.setIcon(lwicn);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
     private void setLookAndFeel(String className)
     {
         try
