@@ -39,6 +39,12 @@ public class MainApplicationFrame extends JFrame
 
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                exitApplication();
+            }
+        });
     }
     
     protected LogWindow createLogWindow()
@@ -155,6 +161,7 @@ public class MainApplicationFrame extends JFrame
             System.exit(0);
         }
     }
+
     private void setLookAndFeel(String className)
     {
         try
