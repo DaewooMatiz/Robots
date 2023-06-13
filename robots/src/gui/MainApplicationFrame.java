@@ -3,38 +3,36 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyVetoException;
+import java.util.ResourceBundle;
 
 import javax.swing.*;
 
 import log.Logger;
 
-/**
- * Что требуется сделать:
- * 1. Метод создания меню перегружен функционалом и трудно читается. 
- * Следует разделить его на серию более простых методов (или вообще выделить отдельный класс).
- *
- */
-public class MainApplicationFrame extends JFrame
-{
+public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
-    
-    public MainApplicationFrame() {
+    private final ResourceBundle resources;
+    private boolean isReadyToClose = false;
+
+    public MainApplicationFrame(ResourceBundle resources) {
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
-        int inset = 50;        
+        this.resources = resources;
+        localizeStandartButtons();
+        int inset = 50;
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(inset, inset,
-            screenSize.width  - inset*2,
-            screenSize.height - inset*2);
+                screenSize.width - inset * 2,
+                screenSize.height - inset * 2);
 
         setContentPane(desktopPane);
-        
-        
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
 
-        GameWindow gameWindow = new GameWindow();
-        gameWindow.setSize(400,  400);
+        GameWindow gameWindow = new GameWindow(resources);
+        gameWindow.setSize(400, 400);
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
@@ -46,64 +44,46 @@ public class MainApplicationFrame extends JFrame
             }
         });
     }
-    
-    protected LogWindow createLogWindow()
-    {
-        LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
-        logWindow.setLocation(10,10);
+    protected void localizeStandartButtons() {
+        UIManager.put("InternalFrame.iconButtonToolTip", resources.getString("universalMinimize"));
+        UIManager.put("InternalFrame.maxButtonToolTip", resources.getString("universalMaximize"));
+        UIManager.put("InternalFrame.closeButtonToolTip", resources.getString("universalClose"));
+        UIManager.put("InternalFrameTitlePane.restoreButtonText", resources.getString("universalMaximize"));
+        UIManager.put("InternalFrameTitlePane.moveButtonText", resources.getString("universalMove"));
+        UIManager.put("InternalFrameTitlePane.sizeButtonText", resources.getString("universalSize"));
+        UIManager.put("InternalFrameTitlePane.minimizeButtonText", resources.getString("universalMinimize"));
+        UIManager.put("InternalFrameTitlePane.maximizeButtonText", resources.getString("universalMaximize"));
+        UIManager.put("InternalFrameTitlePane.closeButtonText", resources.getString("universalClose"));
+        UIManager.put("OptionPane.yesButtonText", resources.getString("universalYes"));
+        UIManager.put("OptionPane.noButtonText", resources.getString("universalNo"));
+
+    }
+    protected LogWindow createLogWindow() {
+        LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource(), resources);
+        logWindow.setLocation(10, 10);
         logWindow.setSize(300, 800);
         setMinimumSize(logWindow.getSize());
         logWindow.pack();
-        Logger.debug("Протокол работает");
+        Logger.debug(resources.getString("debugLogMessage"));
         return logWindow;
     }
-    
-    protected void addWindow(JInternalFrame frame)
-    {
+
+    protected void addWindow(JInternalFrame frame) {
         desktopPane.add(frame);
         frame.setVisible(true);
     }
-    
-//    protected JMenuBar createMenuBar() {
-//        JMenuBar menuBar = new JMenuBar();
-// 
-//        //Set up the lone menu.
-//        JMenu menu = new JMenu("Document");
-//        menu.setMnemonic(KeyEvent.VK_D);
-//        menuBar.add(menu);
-// 
-//        //Set up the first menu item.
-//        JMenuItem menuItem = new JMenuItem("New");
-//        menuItem.setMnemonic(KeyEvent.VK_N);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
-//                KeyEvent.VK_N, ActionEvent.ALT_MASK));
-//        menuItem.setActionCommand("new");
-////        menuItem.addActionListener(this);
-//        menu.add(menuItem);
-// 
-//        //Set up the second menu item.
-//        menuItem = new JMenuItem("Quit");
-//        menuItem.setMnemonic(KeyEvent.VK_Q);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
-//                KeyEvent.VK_Q, ActionEvent.ALT_MASK));
-//        menuItem.setActionCommand("quit");
-////        menuItem.addActionListener(this);
-//        menu.add(menuItem);
-// 
-//        return menuBar;
-//    }
-    
-    private JMenuBar generateMenuBar()
-    {
+
+
+    private JMenuBar generateMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        
-        JMenu lookAndFeelMenu = new JMenu("Режим отображения");
+
+        JMenu lookAndFeelMenu = new JMenu(resources.getString("menuShowMode"));
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
-                "Управление режимом отображения приложения");
-        
+                resources.getString("menuShowModeManagement"));
+
         {
-            JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
+            JMenuItem systemLookAndFeel = new JMenuItem(resources.getString("menuShowModeManagementSystemScheme"), KeyEvent.VK_S);
             systemLookAndFeel.addActionListener((event) -> {
                 setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 this.invalidate();
@@ -112,7 +92,7 @@ public class MainApplicationFrame extends JFrame
         }
 
         {
-            JMenuItem crossplatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
+            JMenuItem crossplatformLookAndFeel = new JMenuItem(resources.getString("menuShowModeManagementJFrameScheme"), KeyEvent.VK_S);
             crossplatformLookAndFeel.addActionListener((event) -> {
                 setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
                 this.invalidate();
@@ -120,26 +100,26 @@ public class MainApplicationFrame extends JFrame
             lookAndFeelMenu.add(crossplatformLookAndFeel);
         }
 
-        JMenu testMenu = new JMenu("Тесты");
+        JMenu testMenu = new JMenu(resources.getString("menuTests"));
         testMenu.setMnemonic(KeyEvent.VK_T);
         testMenu.getAccessibleContext().setAccessibleDescription(
-                "Тестовые команды");
-        
+                resources.getString("menuTestsCommands"));
+
         {
-            JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
+            JMenuItem addLogMessageItem = new JMenuItem(resources.getString("menuTestsCommandsLogMessage"), KeyEvent.VK_S);
             addLogMessageItem.addActionListener((event) -> {
-                Logger.debug("Новая строка");
+                Logger.debug(resources.getString("testString"));
             });
             testMenu.add(addLogMessageItem);
         }
-        JMenu exitMenu = new JMenu("Выход");
+        JMenu exitMenu = new JMenu(resources.getString("menuExit"));
         exitMenu.setMnemonic(KeyEvent.VK_V);
         exitMenu.getAccessibleContext().setAccessibleDescription(
-                "Выход из приложения");
+                resources.getString("menuExitApplication"));
         {
-            JMenuItem exitItem = new JMenuItem("Выйти", KeyEvent.VK_S);
+            JMenuItem exitItem = new JMenuItem(resources.getString("menuExitApplicationDo"), KeyEvent.VK_S);
             exitItem.addActionListener((event) -> {
-                exitApplication();
+                this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
             });
             exitMenu.add(exitItem);
         }
@@ -151,27 +131,36 @@ public class MainApplicationFrame extends JFrame
 
         return menuBar;
     }
-    {UIManager.put("OptionPane.yesButtonText","Да");
-        UIManager.put("OptionPane.noButtonText","Нет");}
-    public void exitApplication() {
-        int answer = JOptionPane.showConfirmDialog(null,
-                "Вы уверены? Весь несохраненный прогресс будет утерян.", "Выход из приложения", JOptionPane.YES_NO_OPTION);
-        if (answer == JOptionPane.YES_OPTION) {
 
-            System.exit(0);
+    public void exitApplication() {
+        if (!isReadyToClose) {
+            int answer = JOptionPane.showConfirmDialog(null,
+                    resources.getString("exitDialogText"), resources.getString("exitDialogTitle"), JOptionPane.YES_NO_OPTION);
+            if (answer == JOptionPane.YES_OPTION) {
+
+                JInternalFrame[] windowsList = this.desktopPane.getAllFrames();
+                for (int i = 0; i < windowsList.length; i++) {
+                    try {
+                        windowsList[i].setClosed(true);
+                    } catch (PropertyVetoException e) {
+                        break;
+                    }
+                }
+                if (this.desktopPane.getAllFrames().length == 0) {
+                    this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+                    isReadyToClose = true;
+                    this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+                }
+            }
         }
     }
 
-    private void setLookAndFeel(String className)
-    {
-        try
-        {
+    private void setLookAndFeel(String className) {
+        try {
             UIManager.setLookAndFeel(className);
             SwingUtilities.updateComponentTreeUI(this);
-        }
-        catch (ClassNotFoundException | InstantiationException
-            | IllegalAccessException | UnsupportedLookAndFeelException e)
-        {
+        } catch (ClassNotFoundException | InstantiationException
+                 | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // just ignore
         }
     }
